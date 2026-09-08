@@ -188,6 +188,24 @@ export async function runMorningBriefings(admin: Admin, limit = 25) {
     } catch (e) {
       report.push({ workspaceId: ws.id, ok: false, error: e instanceof Error ? e.message : String(e) });
     }
+    // تعلّم سِراج الأسبوعي من أداء المنشورات الحقيقية — يُحدَّث مرة كل ٧ أيام بلا تدخل المستخدم.
+    try {
+      const { data: learned } = await admin
+        .from("brain_items")
+        .select("id, updated_at")
+        .eq("workspace_id", ws.id)
+        .eq("kind", "learning")
+        .maybeSingle();
+      const stale =
+        !learned?.updated_at ||
+        Date.now() - new Date(learned.updated_at).getTime() > 7 * 86_400_000;
+      if (stale) {
+        const { learnFromPerformance } = await import("./content-calendar.server");
+        await learnFromPerformance(admin, ws.id);
+      }
+    } catch (e) {
+      console.error("[siraj] weekly learning failed:", e instanceof Error ? e.message : e);
+    }
   }
   return report;
 }
