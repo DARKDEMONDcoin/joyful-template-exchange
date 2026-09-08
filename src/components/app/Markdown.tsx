@@ -32,7 +32,8 @@ export function Markdown({ body, className }: { body: string; className?: string
         "[&_pre]:text-left [&_pre]:[direction:ltr] [&_pre_code]:[unicode-bidi:plaintext]",
         "[&_td>code]:[direction:ltr] [&_td>code]:inline-block",
         // الجداول: أعمدة مقروءة بدل حشر النص
-        "[&_table]:w-full [&_th]:align-top [&_td]:align-top [&_td]:leading-6 [&_th]:whitespace-nowrap",
+        "[&_table]:w-max [&_table]:min-w-full [&_th]:align-top [&_td]:align-top [&_td]:leading-6",
+        "[&_th]:min-w-[6rem] [&_td]:min-w-[9rem] [&_td]:max-w-[22rem]",
         className,
       )}
     >
