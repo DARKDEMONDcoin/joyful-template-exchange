@@ -22,6 +22,7 @@ import { Route as FaqRouteImport } from './routes/faq'
 import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as IntegrationsRouteImport } from './routes/integrations'
+import { Route as NourPreviewRouteImport } from './routes/nour-preview'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PrivacyRouteImport } from './routes/privacy'
@@ -126,6 +127,11 @@ const HowItWorksRoute = HowItWorksRouteImport.update({
 const IntegrationsRoute = IntegrationsRouteImport.update({
   id: '/integrations',
   path: '/integrations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NourPreviewRoute = NourPreviewRouteImport.update({
+  id: '/nour-preview',
+  path: '/nour-preview',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OnboardingRoute = OnboardingRouteImport.update({
@@ -348,6 +354,7 @@ export interface FileRoutesByFullPath {
   '/features': typeof FeaturesRoute
   '/how-it-works': typeof HowItWorksRoute
   '/integrations': typeof IntegrationsRoute
+  '/nour-preview': typeof NourPreviewRoute
   '/onboarding': typeof OnboardingRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -402,6 +409,7 @@ export interface FileRoutesByTo {
   '/features': typeof FeaturesRoute
   '/how-it-works': typeof HowItWorksRoute
   '/integrations': typeof IntegrationsRoute
+  '/nour-preview': typeof NourPreviewRoute
   '/onboarding': typeof OnboardingRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -458,6 +466,7 @@ export interface FileRoutesById {
   '/features': typeof FeaturesRoute
   '/how-it-works': typeof HowItWorksRoute
   '/integrations': typeof IntegrationsRoute
+  '/nour-preview': typeof NourPreviewRoute
   '/onboarding': typeof OnboardingRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -515,6 +524,7 @@ export interface FileRouteTypes {
     | '/features'
     | '/how-it-works'
     | '/integrations'
+    | '/nour-preview'
     | '/onboarding'
     | '/pricing'
     | '/privacy'
@@ -569,6 +579,7 @@ export interface FileRouteTypes {
     | '/features'
     | '/how-it-works'
     | '/integrations'
+    | '/nour-preview'
     | '/onboarding'
     | '/pricing'
     | '/privacy'
@@ -624,6 +635,7 @@ export interface FileRouteTypes {
     | '/features'
     | '/how-it-works'
     | '/integrations'
+    | '/nour-preview'
     | '/onboarding'
     | '/pricing'
     | '/privacy'
@@ -680,6 +692,7 @@ export interface RootRouteChildren {
   FeaturesRoute: typeof FeaturesRoute
   HowItWorksRoute: typeof HowItWorksRoute
   IntegrationsRoute: typeof IntegrationsRoute
+  NourPreviewRoute: typeof NourPreviewRoute
   OnboardingRoute: typeof OnboardingRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
@@ -798,6 +811,13 @@ declare module '@tanstack/react-router' {
       path: '/integrations'
       fullPath: '/integrations'
       preLoaderRoute: typeof IntegrationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/nour-preview': {
+      id: '/nour-preview'
+      path: '/nour-preview'
+      fullPath: '/nour-preview'
+      preLoaderRoute: typeof NourPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/onboarding': {
@@ -1135,6 +1155,7 @@ const rootRouteChildren: RootRouteChildren = {
   FeaturesRoute: FeaturesRoute,
   HowItWorksRoute: HowItWorksRoute,
   IntegrationsRoute: IntegrationsRoute,
+  NourPreviewRoute: NourPreviewRoute,
   OnboardingRoute: OnboardingRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
