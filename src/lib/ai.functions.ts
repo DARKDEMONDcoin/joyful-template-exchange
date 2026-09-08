@@ -15,6 +15,7 @@ import {
 } from "@/lib/nour-run.server";
 import { employeeDirectory, sharedSystemBlocks, type EmployeeId } from "@/lib/team-knowledge";
 import { socialPlaybookBlock } from "@/lib/social-playbook";
+import { seoPlaybookBlock } from "@/lib/seo-playbook";
 
 type Deliverable = {
   title?: string;
@@ -386,6 +387,17 @@ export const askEmployee = createServerFn({ method: "POST" })
       }
     }
 
+    // ذاكرة نور التشغيلية: أرقام Search Console الحقيقية + الكلمات المتتبَّعة + ما نشرته + قنوات النشر.
+    let nourMemory = "";
+    if (data.employeeId === "nour") {
+      try {
+        const { nourContext } = await import("./nour-context.server");
+        nourMemory = await nourContext(supabase as never, data.workspaceId);
+      } catch (error) {
+        console.error("[nour] operational context failed:", error);
+      }
+    }
+
     const system = [
       `أنت ${persona.name}، ${persona.role}`,
       `تعمل داخل منصة «سهل» لصالح العلامة: ${workspace.name} (${workspace.industry}).`,
@@ -398,7 +410,9 @@ export const askEmployee = createServerFn({ method: "POST" })
         : "",
       craft[data.employeeId] ? `## معايير حِرفتك\n${craft[data.employeeId]}` : "",
       data.employeeId === "sonny" ? socialPlaybookBlock : "",
+      data.employeeId === "nour" ? seoPlaybookBlock : "",
       sirajMemory,
+      nourMemory,
       qualityCriteria[data.employeeId]?.length
         ? `## معايير قبول الرد\n${(qualityCriteria[data.employeeId] ?? []).map((criterion, index) => `${index + 1}) ${criterion}`).join("\n")}`
         : "",
