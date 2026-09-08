@@ -4,6 +4,7 @@ import {
   serpSearch,
   auditPage,
   competitorInventory,
+  entityProfile,
   contentBrief,
   type SerpResult,
 } from "./seo-research.server";
@@ -346,7 +347,7 @@ export type Evidence = { block: string; sources: string[]; used: string[] };
 
 /** المرحلة الثانية: تنفيذ البحث من مصادر مجانية وبناء كتلة أدلة للنموذج. */
 export async function gatherEvidence(plan: ResearchPlan, workspaceId: string): Promise<Evidence> {
-  const [keywordSets, metricSets, serpSets, audits, inventories, gsc, ga4, brief] =
+  const [keywordSets, metricSets, serpSets, audits, inventories, gsc, ga4, brief, entities] =
     await Promise.all([
       Promise.all((plan.keywords ?? []).map((k) => keywordExpansion(k))),
       Promise.all((plan.keywords ?? []).slice(0, 3).map((k) => keywordMetrics(k))),
@@ -358,6 +359,7 @@ export async function gatherEvidence(plan: ResearchPlan, workspaceId: string): P
       (plan.searches ?? [])[0]
         ? contentBrief((plan.searches ?? [])[0]!, (plan.urls ?? [])[0])
         : Promise.resolve(null),
+      Promise.all((plan.keywords ?? []).slice(0, 2).map((k) => entityProfile(k))),
     ]);
 
   const parts: string[] = [];
@@ -400,6 +402,27 @@ export async function gatherEvidence(plan: ResearchPlan, workspaceId: string): P
             .join("\n"),
         ),
         "ملاحظة إلزامية: لا تقدّم هذه الأرقام كحجم بحث شهري من أداة مدفوعة، بل كمؤشرات نسبية للمقارنة والترتيب.",
+      ].join("\n"),
+    );
+  }
+
+  const knownEntities = (entities ?? []).filter((e): e is NonNullable<typeof e> => !!e);
+  if (knownEntities.length) {
+    used.push("ربط الكيانات (ويكي بيانات)");
+    parts.push(
+      [
+        "### الكيانات المعرّفة رسمياً (ويكي بيانات — تُستخدم في sameAs والبيانات المنظمة وGEO)",
+        ...knownEntities.map((e) =>
+          [
+            `- «${e.term}» ← ${e.label} (${e.id})${e.description ? ` — ${e.description}` : ""}`,
+            e.aliases.length ? `  صيغ أخرى يبحث بها الناس: ${e.aliases.join(" | ")}` : "",
+            e.officialSite ? `  الموقع الرسمي: ${e.officialSite}` : "",
+            e.wikipediaAr ? `  ويكيبيديا العربية: ${e.wikipediaAr}` : "",
+          ]
+            .filter(Boolean)
+            .join("\n"),
+        ),
+        "استخدم هذه الصيغ الرسمية في العنوان والمتن والبيانات المنظمة، ولا تخترع روابط sameAs غير المذكورة هنا.",
       ].join("\n"),
     );
   }

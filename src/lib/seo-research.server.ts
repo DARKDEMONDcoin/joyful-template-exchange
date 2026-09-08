@@ -1022,3 +1022,61 @@ export async function contentBrief(query: string, ownUrl?: string): Promise<Cont
     notes,
   };
 }
+
+/* ────────────── ربط الكيانات بويكي بيانات (مجاني، بلا مفتاح) ──────────────
+ * ما تغفله أدوات السيو العالمية: تحويل الكلمة إلى «كيان» معرّف رسمياً.
+ * محركات البحث ومساعدات الذكاء الاصطناعي تقتبس المصادر المرتبطة بكيانات واضحة،
+ * وهذا يعطي نور قيم sameAs الحقيقية للبيانات المنظمة بدل تخمينها.
+ */
+export type EntityProfile = {
+  term: string;
+  id: string;
+  label: string;
+  description: string;
+  aliases: string[];
+  officialSite: string | null;
+  wikipediaAr: string | null;
+};
+
+export async function entityProfile(term: string): Promise<EntityProfile | null> {
+  try {
+    const search = await fetch(
+      `https://www.wikidata.org/w/api.php?action=wbsearchentities&format=json&language=ar&uselang=ar&limit=1&search=${encodeURIComponent(term)}`,
+      { headers: { "User-Agent": UA }, signal: timeout(7000) },
+    );
+    if (!search.ok) return null;
+    const found = (await search.json()) as { search?: { id?: string }[] };
+    const id = found.search?.[0]?.id;
+    if (!id) return null;
+
+    const detail = await fetch(
+      `https://www.wikidata.org/w/api.php?action=wbgetentities&format=json&languages=ar|en&props=labels|descriptions|aliases|claims|sitelinks&ids=${id}`,
+      { headers: { "User-Agent": UA }, signal: timeout(8000) },
+    );
+    if (!detail.ok) return null;
+    const body = (await detail.json()) as {
+      entities?: Record<string, {
+        labels?: Record<string, { value?: string }>;
+        descriptions?: Record<string, { value?: string }>;
+        aliases?: Record<string, { value?: string }[]>;
+        claims?: Record<string, { mainsnak?: { datavalue?: { value?: unknown } } }[]>;
+        sitelinks?: Record<string, { title?: string }>;
+      }>;
+    };
+    const e = body.entities?.[id];
+    if (!e) return null;
+    const site = e.claims?.["P856"]?.[0]?.mainsnak?.datavalue?.value;
+    const arTitle = e.sitelinks?.["arwiki"]?.title;
+    return {
+      term,
+      id,
+      label: e.labels?.["ar"]?.value ?? e.labels?.["en"]?.value ?? term,
+      description: e.descriptions?.["ar"]?.value ?? e.descriptions?.["en"]?.value ?? "",
+      aliases: (e.aliases?.["ar"] ?? []).map((a) => a.value ?? "").filter(Boolean).slice(0, 6),
+      officialSite: typeof site === "string" ? site : null,
+      wikipediaAr: arTitle ? `https://ar.wikipedia.org/wiki/${encodeURIComponent(arTitle.replace(/ /g, "_"))}` : null,
+    };
+  } catch {
+    return null;
+  }
+}
