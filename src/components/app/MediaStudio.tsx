@@ -5,7 +5,9 @@ import { ImagePlus, Loader2, Link2, X, Wand2, Check, Globe, RefreshCw } from "lu
 
 import { generateMedia } from "@/lib/media.functions";
 import { listSiteAssets, syncSiteAssets, type StoredAsset } from "@/lib/brand-assets.functions";
+import { ReelStudio } from "@/components/app/ReelStudio";
 import { cn } from "@/lib/utils";
+
 
 export type Attachment = { url: string; type: "image" | "video"; alt?: string };
 export type ImageMode = "auto" | "off" | "manual";
@@ -352,6 +354,18 @@ export function MediaStudio({
               </p>
             )}
           </div>
+
+          <ReelStudio
+            workspaceId={workspaceId}
+            images={[
+              ...results,
+              ...siteAssets.map((a) => a.url),
+              ...attachments.filter((a) => a.type === "image").map((a) => a.url),
+            ]}
+            aspect={aspect}
+            attached={attachments.map((a) => a.url)}
+            onAttach={(url) => attach(url, "video")}
+          />
 
 
           <div className="flex items-center gap-2">

@@ -648,7 +648,10 @@ export const askEmployee = createServerFn({ method: "POST" })
         const fixed = (await autofixPosts(apiKey, deliverables as Record<string, unknown>[], {
           bannedWords: workspace.banned_words ?? [],
           dialect: workspace.tone,
+          // وسائط حقيقية فقط: مرفقات المستخدم أو صورة ستُولَّد فعلاً.
+          hasMedia: Boolean(data.attachments?.length) || (data.imageMode ?? "auto") !== "off",
         })) as typeof deliverables;
+
         // نُبقي نص المحادثة متطابقاً مع المخرج المحسّن بدل عرض نسختين مختلفتين.
         fixed.forEach((d, i) => {
           const old = before[i] ?? "";
