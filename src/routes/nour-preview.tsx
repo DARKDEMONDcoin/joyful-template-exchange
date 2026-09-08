@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 import { Markdown } from "@/components/app/Markdown";
 
-export const Route = createFileRoute("/__nour-preview")({
+export const Route = createFileRoute("/nour-preview")({
   component: NourPreview,
   head: () => ({
     meta: [{ title: "معاينة ردود نور" }],
