@@ -28,10 +28,20 @@ export function Markdown({ body, className }: { body: string; className?: string
         "prose-blockquote:not-italic prose-blockquote:text-muted-foreground",
         "prose-code:rounded prose-code:bg-secondary prose-code:px-1 prose-code:py-0.5 prose-code:before:content-none prose-code:after:content-none",
         "prose-pre:overflow-x-auto prose-pre:rounded-2xl prose-pre:bg-secondary prose-pre:text-foreground",
+        // الأكواد دائماً بالاتجاه اللاتيني حتى لا تتشوّه وسوم HTML داخل واجهة عربية
+        "[&_pre]:text-left [&_pre]:[direction:ltr] [&_pre_code]:[unicode-bidi:plaintext]",
+        "[&_td>code]:[direction:ltr] [&_td>code]:inline-block",
+        // الجداول: أعمدة مقروءة بدل حشر النص
+        "[&_table]:w-full [&_th]:align-top [&_td]:align-top [&_td]:leading-6 [&_th]:whitespace-nowrap",
         className,
       )}
     >
-      <ReactMarkdown remarkPlugins={[remarkGfm]}>{body}</ReactMarkdown>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        rehypePlugins={[rehypeRaw, [rehypeSanitize, schema]]}
+      >
+        {body}
+      </ReactMarkdown>
     </div>
   );
 }
