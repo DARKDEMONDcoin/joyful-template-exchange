@@ -48,6 +48,10 @@ export async function socialEvidence(
     3,
   );
 
+  const key = `${seed}|${platform}|${city}|${handles.join(",")}`;
+  const hit = cache.get(key);
+  if (hit && Date.now() - hit.at < CACHE_TTL_MS) return hit.value;
+
   const work = (async (): Promise<SocialEvidence> => {
     const [g, b, trendSerp, hashSerp, rivalSerp] = await Promise.all([
       googleSuggest(seed).catch(() => [] as string[]),
