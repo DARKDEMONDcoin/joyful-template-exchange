@@ -12,11 +12,13 @@ import {
   Lightbulb,
   Loader2,
   Pencil,
+  Play,
   RefreshCw,
   Send,
   Sparkles,
   Trash2,
   TrendingUp,
+  Video,
   X,
 } from "lucide-react";
 
@@ -49,7 +51,17 @@ export const Route = createFileRoute("/app/calendar")({
   component: CalendarPage,
 });
 
-type Meta = { title?: string; pillar?: string; hook?: string; angle?: string; error?: string; batch?: string };
+type Meta = {
+  title?: string;
+  pillar?: string;
+  hook?: string;
+  angle?: string;
+  error?: string;
+  batch?: string;
+  videoUrl?: string;
+  video_url?: string;
+  attachments?: Array<{ url?: string; type?: string }>;
+};
 type Post = SocialPost & { meta?: Meta | null; metrics?: { likes?: number; comments?: number } | null };
 
 const STATUS: Record<string, { label: string; cls: string }> = {
@@ -65,6 +77,12 @@ const PROVIDERS = ["instagram", "facebook", "linkedin", "x", "tiktok", "pinteres
 const DAYS_AR = ["أحد", "إثنين", "ثلاثاء", "أربعاء", "خميس", "جمعة", "سبت"];
 
 const dayKey = (d: Date) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+const postTitle = (post: Post) => post.meta?.title?.trim() || post.body.split("\n").find((line) => line.trim())?.trim() || "طلب محتوى بلا عنوان";
+const videoOf = (post: Post) => {
+  const direct = post.meta?.videoUrl ?? post.meta?.video_url;
+  if (direct) return direct;
+  return post.meta?.attachments?.find((item) => item.type === "video" && item.url)?.url ?? null;
+};
 
 function CalendarPage() {
   const { data: workspace } = useWorkspace();
@@ -293,79 +311,65 @@ function CalendarPage() {
         ) : null}
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-[1fr_22rem]">
+      <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_20rem]">
         {/* الشبكة */}
-        <section className="rounded-3xl border border-border bg-card p-4">
-          <div className="mb-3 flex items-center justify-between">
-            <button onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))} className="rounded-xl p-2 hover:bg-secondary" aria-label="الشهر السابق">
+        <section className="min-w-0 overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+          <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-b border-border bg-secondary/35 px-4 py-4 sm:px-5">
+            <button onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))} className="grid min-h-11 min-w-11 place-items-center rounded-lg border border-border bg-card hover:bg-secondary" aria-label="الشهر السابق">
               <ChevronRight className="size-5" />
             </button>
-            <h2 className="font-display text-lg font-black">{monthLabel}</h2>
-            <button onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))} className="rounded-xl p-2 hover:bg-secondary" aria-label="الشهر التالي">
+            <div className="min-w-0 text-center">
+              <h2 className="truncate font-display text-lg font-black">{monthLabel}</h2>
+              <button onClick={() => { const d = new Date(); setCursor(new Date(d.getFullYear(), d.getMonth(), 1)); }} className="mt-1 text-xs font-bold text-primary hover:underline">العودة إلى اليوم</button>
+            </div>
+            <button onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))} className="grid min-h-11 min-w-11 place-items-center rounded-lg border border-border bg-card hover:bg-secondary" aria-label="الشهر التالي">
               <ChevronLeft className="size-5" />
             </button>
           </div>
-          <div className="grid grid-cols-7 gap-1 text-center text-[0.68rem] font-bold text-muted-foreground">
-            {DAYS_AR.map((d) => (
-              <div key={d} className="py-1">
-                {d}
-              </div>
-            ))}
-          </div>
-          {isLoading ? (
-            <p className="flex items-center gap-2 p-6 text-sm text-muted-foreground">
-              <Loader2 className="size-4 animate-spin" /> جارٍ التحميل…
-            </p>
-          ) : (
-            <div className="grid grid-cols-7 gap-1">
-              {grid.map((d, i) => {
-                if (!d) return <div key={`e${i}`} className="min-h-24 rounded-xl bg-secondary/30" />;
-                const k = dayKey(d);
-                const items = byDay[k] ?? [];
-                return (
-                  <div
-                    key={k}
-                    className={cn(
-                      "min-h-24 rounded-xl border border-border/60 p-1.5 transition-colors",
-                      k === todayKey && "border-jade bg-jade/5",
-                    )}
-                  >
-                    <p className={cn("mb-1 text-[0.7rem] font-bold", k === todayKey ? "text-jade-deep" : "text-muted-foreground")}>{d.getDate()}</p>
-                    <div className="space-y-1">
-                      {items.slice(0, 3).map((p) => (
-                        <button
-                          key={p.id}
-                          onClick={() => setSelected(p.id)}
-                          className={cn(
-                            "flex w-full items-center gap-1 overflow-hidden rounded-lg border p-1 text-start transition-shadow hover:shadow-sm",
-                            selected === p.id ? "border-foreground" : "border-border/60 bg-background",
-                          )}
-                          title={p.meta?.title ?? p.body.slice(0, 80)}
-                        >
-                          {p.image_url ? (
-                            <img src={p.image_url} alt="" className="size-7 shrink-0 rounded-md object-cover" loading="lazy" />
-                          ) : (
-                            <span className={cn("grid size-7 shrink-0 place-items-center rounded-md", STATUS[p.status]?.cls ?? "bg-secondary")}>
-                              <AppIcon name={p.provider} className="size-3.5" />
-                            </span>
-                          )}
-                          <span className="min-w-0 flex-1">
-                            <span className="block truncate text-[0.66rem] font-bold leading-tight">{p.meta?.title ?? p.body.split("\n")[0]}</span>
-                            <span className="block truncate text-[0.6rem] text-muted-foreground">
-                              {new Date(p.scheduled_at).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" })} · {STATUS[p.status]?.label ?? p.status}
-                            </span>
-                          </span>
-                        </button>
-                      ))}
-                      {items.length > 3 ? <p className="text-[0.6rem] text-muted-foreground">+{items.length - 3} أخرى</p> : null}
-                    </div>
+          <div className="overflow-x-auto pb-1">
+            <div className="min-w-[760px] p-3 sm:p-4">
+              <div className="grid grid-cols-7 border-b border-border text-center text-[0.68rem] font-bold text-muted-foreground">
+                {DAYS_AR.map((d) => (
+                  <div key={d} className="py-2.5">
+                    {d}
                   </div>
-                );
-              })}
+                ))}
+              </div>
+              {isLoading ? (
+                <p className="flex items-center gap-2 p-6 text-sm text-muted-foreground">
+                  <Loader2 className="size-4 animate-spin" /> جارٍ التحميل…
+                </p>
+              ) : (
+                <div className="grid grid-cols-7">
+                  {grid.map((d, i) => {
+                    if (!d) return <div key={`e${i}`} className="min-h-36 border-b border-s border-border/60 bg-secondary/25" />;
+                    const k = dayKey(d);
+                    const items = byDay[k] ?? [];
+                    return (
+                      <div
+                        key={k}
+                        className={cn(
+                          "min-h-36 border-b border-s border-border/60 p-1.5 transition-colors",
+                          k === todayKey && "bg-jade/5",
+                        )}
+                      >
+                        <div className="mb-1.5 flex items-center justify-between">
+                          <span className={cn("grid size-6 place-items-center rounded-full text-[0.68rem] font-bold", k === todayKey ? "bg-jade text-background" : "text-muted-foreground")}>{d.getDate()}</span>
+                          {items.length ? <span className="text-[0.58rem] font-bold text-muted-foreground">{items.length} محتوى</span> : null}
+                        </div>
+                        <div className="space-y-1.5">
+                          {items.slice(0, 2).map((p) => <CalendarPostCard key={p.id} post={p} selected={selected === p.id} onSelect={() => setSelected(p.id)} />)}
+                          {items.length > 2 ? <p className="px-1 text-[0.6rem] font-bold text-primary">+{items.length - 2} طلبات أخرى</p> : null}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
-          )}
+          </div>
           {!isLoading && list.length === 0 ? (
-            <div className="mt-4 rounded-2xl border border-dashed border-border p-8 text-center">
+            <div className="m-4 rounded-xl border border-dashed border-border p-8 text-center">
               <span className="mx-auto grid size-12 place-items-center rounded-2xl bg-secondary">
                 <CalendarDays className="size-6 text-ink-soft" />
               </span>
@@ -379,6 +383,7 @@ function CalendarPage() {
         <aside className="space-y-4">
           {selectedPost ? (
             <PostPanel
+              key={selectedPost.id}
               post={selectedPost}
               connected={connected.has(selectedPost.provider)}
               busy={busy === selectedPost.id}
@@ -404,7 +409,7 @@ function CalendarPage() {
               }
             />
           ) : (
-            <section className="rounded-3xl border border-border bg-card p-5">
+            <section className="rounded-2xl border border-border bg-card p-5 shadow-card">
               <div className="flex items-center gap-3">
                 <span className="size-12 shrink-0 overflow-hidden rounded-2xl">{siraj ? <Portrait memberId="sonny" name={siraj.name} className="size-full" /> : null}</span>
                 <div>
@@ -522,6 +527,46 @@ function Stat({ label, n, cls }: { label: string; n: number; cls: string }) {
   );
 }
 
+function CalendarPostCard({ post, selected, onSelect }: { post: Post; selected: boolean; onSelect: () => void }) {
+  const videoUrl = videoOf(post);
+  const title = postTitle(post);
+  const status = STATUS[post.status] ?? STATUS["draft"]!;
+  return (
+    <button
+      onClick={onSelect}
+      className={cn(
+        "group w-full overflow-hidden rounded-lg border bg-background text-start shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-card",
+        selected ? "border-primary ring-2 ring-primary/15" : "border-border/70 hover:border-primary/50",
+      )}
+      title={title}
+    >
+      <span className="relative block aspect-video overflow-hidden bg-secondary">
+        {post.image_url ? (
+          <img src={post.image_url} alt={`معاينة ${title}`} className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" loading="lazy" />
+        ) : videoUrl ? (
+          <video src={videoUrl} className="size-full object-cover" muted preload="metadata" aria-label={`فيديو ${title}`} />
+        ) : (
+          <span className={cn("grid size-full place-items-center", status.cls)}><AppIcon name={post.provider} className="size-5" /></span>
+        )}
+        {videoUrl ? (
+          <span className="absolute bottom-1 end-1 grid size-6 place-items-center rounded-full bg-foreground/85 text-background shadow-card" title="يتضمن فيديو">
+            <Play className="size-3 fill-current" />
+          </span>
+        ) : null}
+        {post.image_url && videoUrl ? <span className="absolute start-1 top-1 rounded-md bg-background/90 px-1.5 py-0.5 text-[0.52rem] font-black text-foreground">صورة + فيديو</span> : null}
+      </span>
+      <span className="block p-1.5">
+        <span className="line-clamp-2 min-h-7 text-[0.62rem] font-black leading-snug">{title}</span>
+        <span className="mt-1 flex items-center justify-between gap-1 text-[0.54rem] text-muted-foreground">
+          <span className="inline-flex min-w-0 items-center gap-1"><AppIcon name={post.provider} className="size-3 shrink-0" /><span className="truncate">{appLabel(post.provider)}</span></span>
+          <span className="shrink-0">{new Date(post.scheduled_at).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" })}</span>
+        </span>
+        <span className={cn("mt-1 inline-flex rounded px-1.5 py-0.5 text-[0.52rem] font-bold", status.cls)}>{status.label}</span>
+      </span>
+    </button>
+  );
+}
+
 function PostPanel(props: {
   post: Post;
   connected: boolean;
@@ -541,11 +586,23 @@ function PostPanel(props: {
   const [when, setWhen] = useState(() => toLocalInput(post.scheduled_at));
   const st = STATUS[post.status] ?? STATUS["draft"]!;
   const isIdea = post.status === "idea";
+  const videoUrl = videoOf(post);
+  const title = postTitle(post);
 
   return (
-    <section className="overflow-hidden rounded-3xl border border-border bg-card">
-      {post.image_url ? (
-        <img src={post.image_url} alt={post.meta?.title ?? "صورة المنشور"} className="aspect-square w-full object-cover" />
+    <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-card xl:sticky xl:top-24">
+      {post.image_url && videoUrl ? (
+        <div className="grid grid-cols-2 gap-px bg-border">
+          <img src={post.image_url} alt={`صورة ${title}`} className="aspect-square size-full object-cover" />
+          <div className="relative aspect-square overflow-hidden bg-foreground">
+            <video src={videoUrl} controls preload="metadata" className="size-full object-cover" aria-label={`فيديو ${title}`} />
+            <span className="pointer-events-none absolute end-2 top-2 inline-flex items-center gap-1 rounded-md bg-foreground/80 px-2 py-1 text-[0.62rem] font-bold text-background"><Video className="size-3" /> فيديو</span>
+          </div>
+        </div>
+      ) : videoUrl ? (
+        <video src={videoUrl} controls preload="metadata" className="aspect-square w-full bg-foreground object-contain" aria-label={`فيديو ${title}`} />
+      ) : post.image_url ? (
+        <img src={post.image_url} alt={`صورة ${title}`} className="aspect-square w-full object-cover" />
       ) : (
         <div className="grid aspect-[4/2] place-items-center bg-secondary/60 text-muted-foreground">
           <span className="flex flex-col items-center gap-1 text-xs">
@@ -553,7 +610,7 @@ function PostPanel(props: {
           </span>
         </div>
       )}
-      <div className="p-4">
+      <div className="p-5">
         <div className="flex flex-wrap items-center gap-2 text-xs">
           <span className="inline-flex items-center gap-1.5 font-bold">
             <AppIcon name={post.provider} className="size-4" /> {appLabel(post.provider)}
@@ -564,7 +621,10 @@ function PostPanel(props: {
             <X className="size-4" />
           </button>
         </div>
-        {post.meta?.title ? <p className="mt-2 font-display font-black">{post.meta.title}</p> : null}
+        <div className="mt-4">
+          <p className="text-[0.65rem] font-black text-primary">عنوان الطلب</p>
+          <h2 className="mt-1 font-display text-base font-black leading-relaxed">{title}</h2>
+        </div>
         {post.meta?.error ? <p className="mt-2 rounded-xl bg-destructive/10 p-2 text-xs text-destructive">{post.meta.error}</p> : null}
         {post.last_error ? <p className="mt-2 rounded-xl bg-destructive/10 p-2 text-xs text-destructive">{post.last_error}</p> : null}
         {post.metrics?.likes != null ? (
