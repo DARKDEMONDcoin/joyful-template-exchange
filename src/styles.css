@@ -328,6 +328,73 @@
   }
 }
 
+/* تدفق التكاملات في الصفحة الرئيسية */
+@utility integration-grid {
+  background-image: radial-gradient(circle, oklch(1 0 0 / 0.11) 1px, transparent 1.5px);
+  background-size: 24px 24px;
+  mask-image: linear-gradient(to bottom, transparent, black 12%, black 88%, transparent);
+}
+
+@utility integration-flow-line {
+  background-image: repeating-linear-gradient(
+    to left,
+    color-mix(in oklab, var(--amber) 75%, transparent) 0 6px,
+    transparent 6px 13px
+  );
+}
+
+@keyframes integration-app-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+@keyframes integration-employee-active {
+  0%, 38%, 100% {
+    border-color: var(--border);
+    background-color: color-mix(in oklab, var(--secondary) 70%, transparent);
+  }
+  48%, 68% {
+    border-color: color-mix(in oklab, var(--primary) 45%, var(--border));
+    background-color: color-mix(in oklab, var(--primary) 9%, var(--card));
+  }
+}
+
+@keyframes integration-pulse-travel {
+  0% { transform: translateX(110px); opacity: 0; }
+  15%, 70% { opacity: 1; }
+  100% { transform: translateX(-110px); opacity: 0; }
+}
+
+@utility integration-app {
+  animation: integration-app-float 4.5s ease-in-out infinite;
+}
+
+@utility integration-employee {
+  animation: integration-employee-active 4.8s ease-in-out infinite;
+}
+
+@utility integration-pulse {
+  position: absolute;
+  z-index: 20;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  margin-top: -3px;
+  border-radius: 999px;
+  background-color: var(--amber);
+  box-shadow: 0 0 16px color-mix(in oklab, var(--amber) 80%, transparent);
+  animation: integration-pulse-travel 3.2s linear infinite;
+}
+
+@utility integration-pulse-a {
+  right: 50%;
+}
+
+@utility integration-pulse-b {
+  left: 50%;
+  animation-delay: 1.6s;
+}
+
 @utility animate-float {
   animation: float-soft 6s ease-in-out infinite;
 }
