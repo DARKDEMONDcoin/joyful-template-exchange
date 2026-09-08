@@ -21,15 +21,14 @@ const skills = [
 const out = await Promise.all(
   skills.map(async (s) => {
     try {
-      const r = await executeSkill({
-        client: client as never,
+      const r = await executeSkill(client, {
         workspaceId: ws.id,
         employeeId: "nour",
         skillId: s.id,
         values: s.values,
-        origin: "capture",
-      } as never);
-      return { id: s.id, ok: true, output: (r as { output?: string }).output ?? String(r) };
+        origin: "معاينة الشكل",
+      });
+      return { id: s.id, ok: true, output: r.output };
     } catch (e) {
       return { id: s.id, ok: false, output: e instanceof Error ? e.message : String(e) };
     }
