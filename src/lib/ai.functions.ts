@@ -14,6 +14,7 @@ import {
   researchFor,
 } from "@/lib/nour-run.server";
 import { employeeDirectory, sharedSystemBlocks, type EmployeeId } from "@/lib/team-knowledge";
+import { socialPlaybookBlock } from "@/lib/social-playbook";
 
 type Deliverable = {
   title?: string;
@@ -385,6 +386,7 @@ export const askEmployee = createServerFn({ method: "POST" })
         ? `كلمات ممنوعة تماماً: ${workspace.banned_words.join("، ")}.`
         : "",
       craft[data.employeeId] ? `## معايير حِرفتك\n${craft[data.employeeId]}` : "",
+      data.employeeId === "sonny" ? socialPlaybookBlock : "",
       qualityCriteria[data.employeeId]?.length
         ? `## معايير قبول الرد\n${(qualityCriteria[data.employeeId] ?? []).map((criterion, index) => `${index + 1}) ${criterion}`).join("\n")}`
         : "",
@@ -623,6 +625,27 @@ export const askEmployee = createServerFn({ method: "POST" })
     if (intent !== "work") {
       deliverables = [];
       needsConnection = null;
+    }
+
+    // سِراج: فحص جودة حتمي لكل منشور (هوك، طول المنصة، دعوة، هاشتاقات، حشو، بقايا تنسيق)
+    // وإعادة كتابة موجّهة لأي منشور ضعيف قبل عرضه — لا يخرج من سِراج نص دون المستوى.
+    if (data.employeeId === "sonny" && deliverables.length) {
+      try {
+        const { autofixPosts } = await import("./post-autofix.server");
+        const before = deliverables.map((d) => d.body ?? "");
+        const fixed = (await autofixPosts(apiKey, deliverables as Record<string, unknown>[], {
+          bannedWords: workspace.banned_words ?? [],
+          dialect: workspace.tone,
+        })) as typeof deliverables;
+        // نُبقي نص المحادثة متطابقاً مع المخرج المحسّن بدل عرض نسختين مختلفتين.
+        fixed.forEach((d, i) => {
+          const old = before[i] ?? "";
+          if (old && d.body && d.body !== old && reply.includes(old)) reply = reply.replace(old, d.body);
+        });
+        deliverables = fixed;
+      } catch (error) {
+        console.warn("[chat] autofix skipped:", error instanceof Error ? error.message : error);
+      }
     }
 
     // الصور تُولَّد فعلياً — لا يبقى المستخدم مع «برومبت» مكتوب فقط.

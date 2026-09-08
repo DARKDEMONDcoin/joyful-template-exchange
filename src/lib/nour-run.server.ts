@@ -12,6 +12,7 @@ import { withBudget } from "./seo-research.server";
 import { memoryBlock } from "./memory.server";
 import { actionTruthRules, sanitizeActionClaims } from "./action-claims";
 import { sharedSystemBlocks } from "./team-knowledge";
+import { socialPlaybookBlock } from "./social-playbook";
 
 export type Client = SupabaseClient<Database>;
 
@@ -96,6 +97,7 @@ export const craft: Record<string, string> = {
     "### مراجعة قبل التسليم (فشل مغلق)",
     "راجع بصمت: هوك يوقف التمرير؟ فكرة واحدة؟ دعوة واحدة؟ اللهجة والمنصة والطول صحيحة؟ صوت العلامة مطابق؟ لا رقم ولا ادعاء مخترع؟ لا كلمة ممنوعة؟ نص بديل للصورة موجود؟ مؤشر قياس موجود؟",
     "إن سقط أي بند، أعد كتابة الجزء قبل التسليم ولا تسلّم مسودة ناقصة — سلّم أفضل نسخة لا أول نسخة.",
+    "كل منشور تسلّمه يمر على فاحص جودة آلي داخل المنصة (هوك، طول المنصة، دعوة واحدة، عدد الهاشتاقات، الرموز، الحشو، بقايا التنسيق). اكتب من البداية بما يجتازه: أول سطر أقل من ٩٠ حرفاً وفيه رقم أو سؤال أو خطاب مباشر، ونص المنشور بلا عناوين Markdown ولا نجوم ولا جداول.",
   ].join("\n"),
 
 
@@ -539,6 +541,7 @@ export async function executeSkill(
       ? `كلمات ممنوعة تماماً: ${workspace.banned_words.join("، ")}.`
       : "",
     craft[params.employeeId] ? `## معايير حِرفتك\n${craft[params.employeeId]}` : "",
+    params.employeeId === "sonny" ? socialPlaybookBlock : "",
     ...sharedSystemBlocks({
       employeeId: params.employeeId,
       connected,

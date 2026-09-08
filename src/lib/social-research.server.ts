@@ -22,6 +22,10 @@ export type SocialEvidence = { block: string; used: string[] };
 
 const EMPTY: SocialEvidence = { block: "", used: [] };
 
+/** ذاكرة قصيرة للأدلة: نفس الموضوع خلال نصف ساعة لا يستحق ١٢ ثانية بحث جديدة. */
+const CACHE_TTL_MS = 30 * 60 * 1000;
+const cache = new Map<string, { at: number; value: SocialEvidence }>();
+
 function uniq(list: string[], max: number): string[] {
   return [...new Set(list.map((s) => s.trim()).filter((s) => s.length > 1))].slice(0, max);
 }
@@ -43,6 +47,10 @@ export async function socialEvidence(
     (opts.rivals ?? "").match(/@[A-Za-z0-9._]{2,30}/g) ?? [],
     3,
   );
+
+  const key = `${seed}|${platform}|${city}|${handles.join(",")}`;
+  const hit = cache.get(key);
+  if (hit && Date.now() - hit.at < CACHE_TTL_MS) return hit.value;
 
   const work = (async (): Promise<SocialEvidence> => {
     const [g, b, trendSerp, hashSerp, rivalSerp] = await Promise.all([
@@ -102,5 +110,7 @@ export async function socialEvidence(
     return { block: parts.join("\n\n"), used };
   })();
 
-  return withBudget(work, opts.budgetMs ?? 12_000, EMPTY);
+  const value = await withBudget(work, opts.budgetMs ?? 12_000, EMPTY);
+  if (value.block) cache.set(key, { at: Date.now(), value });
+  return value;
 }
