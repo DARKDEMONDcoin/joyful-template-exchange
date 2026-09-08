@@ -1,7 +1,15 @@
 import ReactMarkdown from "react-markdown";
+import rehypeRaw from "rehype-raw";
+import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
 import remarkGfm from "remark-gfm";
 
 import { cn } from "@/lib/utils";
+
+/** يسمح فقط بوسوم نصية بسيطة داخل مخرجات الموظفين (فاصل سطر، تمييز، مرتفع/منخفض). */
+const schema = {
+  ...defaultSchema,
+  tagNames: ["br", "sub", "sup", "mark", "kbd", "abbr", ...(defaultSchema.tagNames ?? [])],
+};
 
 /** عرض مخرجات الموظفين بتنسيق Markdown كامل (جداول، قوائم، عناوين، أكواد) بشكل احترافي وRTL. */
 export function Markdown({ body, className }: { body: string; className?: string }) {
@@ -20,10 +28,21 @@ export function Markdown({ body, className }: { body: string; className?: string
         "prose-blockquote:not-italic prose-blockquote:text-muted-foreground",
         "prose-code:rounded prose-code:bg-secondary prose-code:px-1 prose-code:py-0.5 prose-code:before:content-none prose-code:after:content-none",
         "prose-pre:overflow-x-auto prose-pre:rounded-2xl prose-pre:bg-secondary prose-pre:text-foreground",
+        // الأكواد دائماً بالاتجاه اللاتيني حتى لا تتشوّه وسوم HTML داخل واجهة عربية
+        "[&_pre]:text-left [&_pre]:[direction:ltr] [&_pre_code]:[unicode-bidi:plaintext]",
+        "[&_td>code]:[direction:ltr] [&_td>code]:inline-block",
+        // الجداول: أعمدة مقروءة بدل حشر النص
+        "[&_table]:w-max [&_table]:min-w-full [&_th]:align-top [&_td]:align-top [&_td]:leading-6",
+        "[&_th]:min-w-[6rem] [&_td]:min-w-[9rem] [&_td]:max-w-[22rem]",
         className,
       )}
     >
-      <ReactMarkdown remarkPlugins={[remarkGfm]}>{body}</ReactMarkdown>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        rehypePlugins={[rehypeRaw, [rehypeSanitize, schema]]}
+      >
+        {body}
+      </ReactMarkdown>
     </div>
   );
 }
