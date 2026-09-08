@@ -555,6 +555,7 @@ export async function executeSkill(
       : "",
     craft[params.employeeId] ? `## معايير حِرفتك\n${craft[params.employeeId]}` : "",
     params.employeeId === "sonny" ? socialPlaybookBlock : "",
+    sirajMemory,
     ...sharedSystemBlocks({
       employeeId: params.employeeId,
       connected,
