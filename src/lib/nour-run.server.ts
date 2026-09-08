@@ -503,6 +503,19 @@ export async function executeSkill(
     }
   }
 
+  // ذاكرة سِراج التشغيلية: صوت العلامة + ما تعلّمه من أداء الحساب + التقويم القادم.
+  let sirajMemory = "";
+  if (params.employeeId === "sonny") {
+    try {
+      const { sirajContext } = await import("./siraj-context.server");
+      sirajMemory = await sirajContext(client as never, params.workspaceId);
+    } catch (error) {
+      console.error("[siraj] operational context failed:", error);
+    }
+  }
+
+
+
 
   // سياق حيّ من حسابات العلامة المربوطة (بريد، تقويم، CRM…) عبر Pipedream.
   let live = { block: "", used: [] as string[] };
@@ -542,6 +555,7 @@ export async function executeSkill(
       : "",
     craft[params.employeeId] ? `## معايير حِرفتك\n${craft[params.employeeId]}` : "",
     params.employeeId === "sonny" ? socialPlaybookBlock : "",
+    sirajMemory,
     ...sharedSystemBlocks({
       employeeId: params.employeeId,
       connected,

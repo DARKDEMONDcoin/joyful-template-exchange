@@ -375,6 +375,17 @@ export const askEmployee = createServerFn({ method: "POST" })
       })
       .join("\n");
 
+    // ذاكرة سِراج التشغيلية: صوت العلامة + قواعد مستخلصة من أداء الحساب + المجدول القادم.
+    let sirajMemory = "";
+    if (data.employeeId === "sonny") {
+      try {
+        const { sirajContext } = await import("./siraj-context.server");
+        sirajMemory = await sirajContext(supabase as never, data.workspaceId);
+      } catch (error) {
+        console.error("[siraj] operational context failed:", error);
+      }
+    }
+
     const system = [
       `أنت ${persona.name}، ${persona.role}`,
       `تعمل داخل منصة «سهل» لصالح العلامة: ${workspace.name} (${workspace.industry}).`,
@@ -387,6 +398,7 @@ export const askEmployee = createServerFn({ method: "POST" })
         : "",
       craft[data.employeeId] ? `## معايير حِرفتك\n${craft[data.employeeId]}` : "",
       data.employeeId === "sonny" ? socialPlaybookBlock : "",
+      sirajMemory,
       qualityCriteria[data.employeeId]?.length
         ? `## معايير قبول الرد\n${(qualityCriteria[data.employeeId] ?? []).map((criterion, index) => `${index + 1}) ${criterion}`).join("\n")}`
         : "",
