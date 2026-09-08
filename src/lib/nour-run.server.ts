@@ -12,6 +12,7 @@ import { withBudget } from "./seo-research.server";
 import { memoryBlock } from "./memory.server";
 import { actionTruthRules, sanitizeActionClaims } from "./action-claims";
 import { sharedSystemBlocks } from "./team-knowledge";
+import { socialPlaybookBlock } from "./social-playbook";
 
 export type Client = SupabaseClient<Database>;
 
@@ -539,6 +540,7 @@ export async function executeSkill(
       ? `كلمات ممنوعة تماماً: ${workspace.banned_words.join("، ")}.`
       : "",
     craft[params.employeeId] ? `## معايير حِرفتك\n${craft[params.employeeId]}` : "",
+    params.employeeId === "sonny" ? socialPlaybookBlock : "",
     ...sharedSystemBlocks({
       employeeId: params.employeeId,
       connected,
