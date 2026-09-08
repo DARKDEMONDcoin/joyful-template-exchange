@@ -81,7 +81,8 @@ export async function sirajContext(client: Client, workspaceId: string): Promise
   if (published.length >= 3) {
     const sorted = [...published].sort((a, b) => engagement(b.metrics) - engagement(a.metrics));
     const winners = sorted.slice(0, 3);
-    const loser = sorted[sorted.length - 1];
+    // لا نعرض «الأضعف» إلا حين تكفي العيّنة، حتى لا يتكرر منشور موجود ضمن الأقوى.
+    const loser = sorted.length >= 5 ? sorted[sorted.length - 1] : undefined;
     sections.push(
       [
         "### أقوى منشورات العميل فعلياً (حاكِ بنيتها وهوكها لا نصّها)",
