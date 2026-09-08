@@ -205,6 +205,16 @@ function CalendarPage() {
   };
 
   const monthLabel = cursor.toLocaleDateString("ar-EG", { month: "long", year: "numeric" });
+  const monthPosts = useMemo(
+    () =>
+      list
+        .filter((post) => {
+          const date = new Date(post.scheduled_at);
+          return date.getFullYear() === cursor.getFullYear() && date.getMonth() === cursor.getMonth();
+        })
+        .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime()),
+    [list, cursor],
+  );
   const siraj = getMember("sonny");
 
   return (
@@ -326,7 +336,7 @@ function CalendarPage() {
               <ChevronLeft className="size-5" />
             </button>
           </div>
-          <div className="overflow-x-auto pb-1">
+          <div className="hidden overflow-x-auto pb-1 md:block">
             <div className="min-w-[760px] p-3 sm:p-4">
               <div className="grid grid-cols-7 border-b border-border text-center text-[0.68rem] font-bold text-muted-foreground">
                 {DAYS_AR.map((d) => (
@@ -368,8 +378,29 @@ function CalendarPage() {
               )}
             </div>
           </div>
+          <div className="space-y-3 p-4 md:hidden">
+            {monthPosts.map((post) => {
+              const date = new Date(post.scheduled_at);
+              return (
+                <div key={post.id} className="grid grid-cols-[3rem_minmax(0,1fr)] gap-3">
+                  <div className="pt-1 text-center">
+                    <p className="font-display text-xl font-black">{date.toLocaleDateString("ar-EG", { day: "numeric" })}</p>
+                    <p className="text-[0.62rem] font-bold text-muted-foreground">{date.toLocaleDateString("ar-EG", { weekday: "short" })}</p>
+                  </div>
+                  <CalendarPostCard post={post} selected={selected === post.id} onSelect={() => setSelected(post.id)} mobile />
+                </div>
+              );
+            })}
+            {!isLoading && monthPosts.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-border p-8 text-center">
+                <span className="mx-auto grid size-12 place-items-center rounded-xl bg-secondary"><CalendarDays className="size-6 text-ink-soft" /></span>
+                <p className="mt-3 font-black">تقويمك فارغ</p>
+                <p className="mt-1 text-sm text-ink-soft">خطّط محتوى الشهر ليظهر هنا بالصور والعناوين والمواعيد.</p>
+              </div>
+            ) : null}
+          </div>
           {!isLoading && list.length === 0 ? (
-            <div className="m-4 rounded-xl border border-dashed border-border p-8 text-center">
+            <div className="m-4 hidden rounded-xl border border-dashed border-border p-8 text-center md:block">
               <span className="mx-auto grid size-12 place-items-center rounded-2xl bg-secondary">
                 <CalendarDays className="size-6 text-ink-soft" />
               </span>
@@ -527,7 +558,7 @@ function Stat({ label, n, cls }: { label: string; n: number; cls: string }) {
   );
 }
 
-function CalendarPostCard({ post, selected, onSelect }: { post: Post; selected: boolean; onSelect: () => void }) {
+function CalendarPostCard({ post, selected, onSelect, mobile = false }: { post: Post; selected: boolean; onSelect: () => void; mobile?: boolean }) {
   const videoUrl = videoOf(post);
   const title = postTitle(post);
   const status = STATUS[post.status] ?? STATUS["draft"]!;
@@ -540,7 +571,7 @@ function CalendarPostCard({ post, selected, onSelect }: { post: Post; selected: 
       )}
       title={title}
     >
-      <span className="relative block aspect-video overflow-hidden bg-secondary">
+      <span className={cn("relative block overflow-hidden bg-secondary", mobile ? "aspect-[2/1]" : "aspect-video")}>
         {post.image_url ? (
           <img src={post.image_url} alt={`معاينة ${title}`} className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" loading="lazy" />
         ) : videoUrl ? (
@@ -555,9 +586,9 @@ function CalendarPostCard({ post, selected, onSelect }: { post: Post; selected: 
         ) : null}
         {post.image_url && videoUrl ? <span className="absolute start-1 top-1 rounded-md bg-background/90 px-1.5 py-0.5 text-[0.52rem] font-black text-foreground">صورة + فيديو</span> : null}
       </span>
-      <span className="block p-1.5">
-        <span className="line-clamp-2 min-h-7 text-[0.62rem] font-black leading-snug">{title}</span>
-        <span className="mt-1 flex items-center justify-between gap-1 text-[0.54rem] text-muted-foreground">
+      <span className={cn("block", mobile ? "p-3" : "p-1.5")}>
+        <span className={cn("line-clamp-2 font-black leading-snug", mobile ? "min-h-10 text-sm" : "min-h-7 text-[0.62rem]")}>{title}</span>
+        <span className={cn("mt-1 flex items-center justify-between gap-1 text-muted-foreground", mobile ? "text-xs" : "text-[0.54rem]")}>
           <span className="inline-flex min-w-0 items-center gap-1"><AppIcon name={post.provider} className="size-3 shrink-0" /><span className="truncate">{appLabel(post.provider)}</span></span>
           <span className="shrink-0">{new Date(post.scheduled_at).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" })}</span>
         </span>
