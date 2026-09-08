@@ -22,6 +22,10 @@ export type SocialEvidence = { block: string; used: string[] };
 
 const EMPTY: SocialEvidence = { block: "", used: [] };
 
+/** ذاكرة قصيرة للأدلة: نفس الموضوع خلال نصف ساعة لا يستحق ١٢ ثانية بحث جديدة. */
+const CACHE_TTL_MS = 30 * 60 * 1000;
+const cache = new Map<string, { at: number; value: SocialEvidence }>();
+
 function uniq(list: string[], max: number): string[] {
   return [...new Set(list.map((s) => s.trim()).filter((s) => s.length > 1))].slice(0, max);
 }
