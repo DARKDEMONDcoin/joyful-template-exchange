@@ -1,7 +1,15 @@
 import ReactMarkdown from "react-markdown";
+import rehypeRaw from "rehype-raw";
+import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
 import remarkGfm from "remark-gfm";
 
 import { cn } from "@/lib/utils";
+
+/** يسمح فقط بوسوم نصية بسيطة داخل مخرجات الموظفين (فاصل سطر، تمييز، مرتفع/منخفض). */
+const schema = {
+  ...defaultSchema,
+  tagNames: ["br", "sub", "sup", "mark", "kbd", "abbr", ...(defaultSchema.tagNames ?? [])],
+};
 
 /** عرض مخرجات الموظفين بتنسيق Markdown كامل (جداول، قوائم، عناوين، أكواد) بشكل احترافي وRTL. */
 export function Markdown({ body, className }: { body: string; className?: string }) {
