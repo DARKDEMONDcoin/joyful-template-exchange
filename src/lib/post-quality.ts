@@ -275,14 +275,24 @@ export function scorePost({ text, provider, hasMedia = false, bannedWords = [] }
       : "اكسر النص إلى فقرات قصيرة (سطر أو سطران) ليسهل قراءته على الجوال.",
   );
 
-  // ١٠) الحشو التسويقي.
+  // ١٠) الحشو التسويقي وبصمة النص الآلي — بندان يفصلان المنشور الاحترافي عن القالب.
   const fluff = FLUFF.filter((f) => clean.includes(f));
   add(
     "fluff",
     "بلا مبالغة أو حشو تسويقي",
-    8,
-    fluff.length ? "warn" : "pass",
+    16,
+    fluff.length >= 2 ? "fail" : fluff.length === 1 ? "warn" : "pass",
     fluff.length ? `استبدل بعبارات ملموسة: ${fluff.join("، ")}` : "الصياغة ملموسة.",
+  );
+
+  // ١٠ب) تفصيلة ملموسة (رقم/سعر/وقت/مكان) — بدونها المنشور كلام عام لا يبيع.
+  const concrete = CONCRETE.test(core);
+  add(
+    "concrete",
+    "تفصيلة ملموسة (رقم أو وقت أو مكان)",
+    10,
+    concrete ? "pass" : "warn",
+    concrete ? "يوجد تفصيل محدد." : "أضف تفصيلة محددة: رقم، سعر، مدة، أو اسم مكان — العموميات لا تُقنع.",
   );
 
   // ١١) الوسائط عندما تشترطها المنصة.
