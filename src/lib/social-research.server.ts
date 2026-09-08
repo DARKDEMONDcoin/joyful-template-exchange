@@ -110,5 +110,7 @@ export async function socialEvidence(
     return { block: parts.join("\n\n"), used };
   })();
 
-  return withBudget(work, opts.budgetMs ?? 12_000, EMPTY);
+  const value = await withBudget(work, opts.budgetMs ?? 12_000, EMPTY);
+  if (value.block) cache.set(key, { at: Date.now(), value });
+  return value;
 }
