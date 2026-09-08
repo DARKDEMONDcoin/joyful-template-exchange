@@ -28,10 +28,21 @@ function providerOf(post: Post): string | null {
 export async function autofixPosts(
   apiKey: string,
   posts: Post[],
-  opts: { bannedWords?: string[]; dialect?: string } = {},
+  opts: { bannedWords?: string[]; dialect?: string; hasMedia?: boolean } = {},
 ): Promise<Post[]> {
   if (!posts.length) return posts;
   const banned = opts.bannedWords ?? [];
+  /** وسائط فعلية: إمّا المستخدم أرفق/طلب صورة، أو المنشور نفسه يحمل وصف صورة. */
+  const mediaOf = (post: Post) => {
+    const img = post["image_prompt"];
+    const vid = post["video_url"];
+    return (
+      Boolean(opts.hasMedia) ||
+      (typeof img === "string" && img.trim().length > 10) ||
+      (typeof vid === "string" && vid.trim().length > 5)
+    );
+  };
+
 
   const weak = posts
     .map((post, index) => ({ post, index, provider: providerOf(post) }))
@@ -41,12 +52,13 @@ export async function autofixPosts(
       report: scorePost({
         text: String(row.post.body ?? ""),
         provider: row.provider,
-        hasMedia: true,
+        hasMedia: mediaOf(row.post),
         bannedWords: banned,
       }),
     }))
     .filter((row) => row.report.blockers.length > 0 || row.report.score < THRESHOLD)
     .slice(0, 4);
+
 
   if (!weak.length) return posts;
 
@@ -95,7 +107,7 @@ export async function autofixPosts(
       const row = weak[(Number(fix.i) || 0) - 1];
       const body = typeof fix.body === "string" ? fix.body.trim() : "";
       if (!row || body.length < 20) continue;
-      const after = scorePost({ text: body, provider: row.provider, hasMedia: true, bannedWords: banned });
+      const after = scorePost({ text: body, provider: row.provider, hasMedia: mediaOf(row.post), bannedWords: banned });
       // لا نستبدل إلا بتحسّن حقيقي — حتى لا يفسد الإصلاح نصاً كان أفضل.
       if (after.score > row.report.score && after.blockers.length <= row.report.blockers.length) {
         out[row.index] = { ...row.post, body };
