@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CheckCheck, ArrowLeft, AlertTriangle, Loader2 } from "lucide-react";
+import { CheckCheck, ArrowLeft, AlertTriangle, Loader2, CircleCheck, Clock3, Link2, PlayCircle } from "lucide-react";
 
 import { ActivationMap } from "@/components/app/ActivationMap";
 import { AppShell } from "@/components/app/AppShell";
@@ -43,13 +43,15 @@ function AppHome() {
   const broken = (integrations ?? []).filter((i) => i.status === "error");
 
   const kpis = [
-    { k: "مهام منجزة", v: String(done.length), d: "منذ انطلاق مساحتك" },
-    { k: "قيد التنفيذ", v: String(running.length), d: "فريقك يعمل الآن" },
-    { k: "بانتظار موافقتك", v: String(review.length), d: "مراجعة سريعة" },
+    { k: "مهام منجزة", v: String(done.length), d: "منذ انطلاق مساحتك", icon: CircleCheck, tone: "bg-jade/12 text-jade" },
+    { k: "قيد التنفيذ", v: String(running.length), d: "فريقك يعمل الآن", icon: PlayCircle, tone: "bg-amber/15 text-amber" },
+    { k: "بانتظار موافقتك", v: String(review.length), d: "تحتاج قرارك", icon: Clock3, tone: "bg-coral/12 text-coral" },
     {
       k: "حسابات مرتبطة",
       v: String((integrations ?? []).filter((i) => i.status === "connected").length),
       d: `من أصل ${integrations?.length ?? 0}`,
+      icon: Link2,
+      tone: "bg-sky/15 text-ink-soft",
     },
   ];
 
@@ -75,15 +77,48 @@ function AppHome() {
 
       <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         {kpis.map((k) => (
-          <div key={k.k} className="rounded-2xl border border-border bg-card p-4 sm:p-5">
-            <p className="truncate text-xs font-semibold text-muted-foreground sm:text-sm">{k.k}</p>
-            <p className="mt-1.5 font-display text-2xl font-black tabular-nums sm:text-3xl">{k.v}</p>
-            <p className="mt-1 truncate text-[0.7rem] text-jade-deep">{k.d}</p>
+          <div key={k.k} className="group rounded-2xl border border-border/80 bg-card p-4 shadow-card transition-transform duration-300 hover:-translate-y-0.5 sm:p-5">
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
+              <div className="min-w-0">
+                <p className="truncate text-xs font-semibold text-muted-foreground sm:text-sm">{k.k}</p>
+                <p className="mt-1.5 font-display text-2xl font-black tabular-nums sm:text-3xl">{k.v}</p>
+              </div>
+              <span className={`grid size-9 shrink-0 place-items-center rounded-xl ${k.tone}`}>
+                <k.icon className="size-4.5" strokeWidth={2.2} />
+              </span>
+            </div>
+            <p className="mt-1 truncate text-[0.7rem] text-muted-foreground">{k.d}</p>
           </div>
         ))}
       </div>
 
-      {workspace ? <MorningBriefingCard className="mt-5" workspaceId={workspace.id} /> : null}
+      <div className="mt-5 grid items-start gap-4 xl:grid-cols-[minmax(0,1.65fr)_minmax(18rem,0.7fr)] [&>*]:min-w-0">
+        {workspace ? <MorningBriefingCard workspaceId={workspace.id} /> : null}
+
+        <section className="rounded-2xl border border-border bg-card p-5 shadow-card sm:p-6">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-bold text-coral">الأولوية الآن</p>
+              <h2 className="mt-1 font-display text-lg font-black">طلبات الاعتماد</h2>
+            </div>
+            <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-coral/12 font-display text-lg font-black text-coral">
+              {review.length}
+            </span>
+          </div>
+          <ul className="mt-4 space-y-2">
+            {review.slice(0, 4).map((a) => (
+              <li key={a.id} className="rounded-xl border border-border/70 bg-secondary/35 px-3 py-2.5">
+                <p className="truncate text-xs font-bold text-muted-foreground">{a.kind}</p>
+                <p className="mt-0.5 line-clamp-2 text-sm font-bold leading-relaxed">{a.title}</p>
+              </li>
+            ))}
+            {review.length === 0 ? <li className="py-4 text-sm text-muted-foreground">لا شيء ينتظرك الآن.</li> : null}
+          </ul>
+          <Link to="/app/approvals" className="mt-4 flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground transition-opacity hover:opacity-90">
+            <CheckCheck className="size-4" /> راجع الكل
+          </Link>
+        </section>
+      </div>
 
       <div className="mt-5 grid gap-3 lg:grid-cols-2">
         <details className="group rounded-2xl border border-border bg-card">
@@ -125,7 +160,7 @@ function AppHome() {
 
 
       <div className="mt-5 grid gap-4 lg:grid-cols-[1.6fr_1fr] [&>*]:min-w-0">
-        <section className="rounded-2xl border border-border bg-card p-5 sm:p-6">
+        <section className="rounded-2xl border border-border bg-card p-5 shadow-card sm:p-6">
           <div className="flex items-center justify-between">
             <h2 className="font-display text-lg font-black">آخر ما أنجزه فريقك</h2>
             <Link to="/app/tasks" className="text-sm font-bold text-primary">
@@ -154,7 +189,7 @@ function AppHome() {
               {list.slice(0, 6).map((t) => {
                 const member = getMember(t.employee_id);
                 return (
-                  <li key={t.id} className="rounded-2xl border border-border/70 p-4">
+                  <li key={t.id} className="rounded-xl border border-border/70 p-4 transition-colors hover:bg-secondary/35">
                     <div className="flex flex-wrap items-center gap-2.5 text-xs">
                       {member ? (
                         <span className="inline-flex items-center gap-1.5 font-bold">
@@ -189,34 +224,8 @@ function AppHome() {
           )}
         </section>
 
-        <div className="space-y-6">
-          <section className="rounded-2xl border border-border bg-card p-5 sm:p-6">
-            <div className="flex items-center justify-between">
-              <h2 className="font-display text-lg font-black">بانتظار موافقتك</h2>
-              <span className="rounded-full bg-coral/15 px-2.5 py-0.5 text-xs font-black text-coral">
-                {review.length}
-              </span>
-            </div>
-            <ul className="mt-4 space-y-3">
-              {review.slice(0, 3).map((a) => (
-                <li key={a.id} className="rounded-2xl bg-secondary/50 p-4">
-                  <p className="text-xs font-bold text-muted-foreground">{a.kind}</p>
-                  <p className="mt-1 font-bold">{a.title}</p>
-                </li>
-              ))}
-              {review.length === 0 ? (
-                <li className="text-sm text-muted-foreground">لا شيء ينتظرك الآن.</li>
-              ) : null}
-            </ul>
-            <Link
-              to="/app/approvals"
-              className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-foreground py-2.5 text-sm font-bold text-background"
-            >
-              <CheckCheck className="size-4" /> راجع الكل
-            </Link>
-          </section>
-
-          <section className="rounded-2xl border border-border bg-card p-5 sm:p-6">
+        <div className="space-y-4">
+          <section className="rounded-2xl border border-border bg-card p-5 shadow-card sm:p-6">
             <h2 className="font-display text-lg font-black">مهام جارية</h2>
             <ul className="mt-4 space-y-3">
               {running.slice(0, 4).map((t) => (
