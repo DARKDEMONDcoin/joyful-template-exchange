@@ -272,7 +272,7 @@ function AuthPage() {
           <div className="auth-form-card">
             <div className="mb-6 hidden lg:block">
               <span className="auth-eyebrow">{isSignup ? "حساب مجاني بدون بطاقة" : "دخول آمن"}</span>
-              <h1 className="mt-3 font-display text-3xl font-black">{isSignup ? "كوّن فريقك الآن" : "سجّل الدخول إلى فريقك"}</h1>
+              <div className="mt-3 font-display text-3xl font-black">{isSignup ? "كوّن فريقك الآن" : "سجّل الدخول إلى فريقك"}</div>
               <p className="mt-2 text-sm text-muted-foreground">{isSignup ? "ثلاث خطوات قصيرة، ثم تبدأ مساحة العمل." : "أدخل بياناتك للعودة إلى كل ما أنجزه فريقك."}</p>
             </div>
 
