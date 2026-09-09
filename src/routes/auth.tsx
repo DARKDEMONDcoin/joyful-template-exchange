@@ -13,10 +13,13 @@ import {
   ShieldCheck,
   Sparkles,
   User,
+  CheckCircle2,
 } from "lucide-react";
 
-import { PageShell, PageHero } from "@/components/site/PageShell";
 import { Reveal } from "@/components/Reveal";
+import { AmbientBackground } from "@/components/site/AmbientBackground";
+import { TeamOrbit } from "@/components/site/TeamOrbit";
+import { ThemeToggle } from "@/components/site/ThemeToggle";
 import { supabase } from "@/integrations/supabase/client";
 import { signIn } from "@/lib/auth";
 import { GUEST_EMAIL } from "@/lib/guest.functions";
@@ -225,21 +228,37 @@ function AuthPage() {
 
 
   return (
-    <PageShell>
-      <PageHero
-        eyebrow={isSignup ? "حساب مجاني بدون بطاقة" : "أهلاً بعودتك"}
-        title={isSignup ? "أنشئ حسابك في دقيقة" : "سجّل الدخول إلى فريقك"}
-        lead={
-          isSignup
-            ? "اسمك، اسم نشاطك، ولهجتك — وسيبدأ ستة موظفين رقميين العمل معك بالعربية."
-            : "أدخل بريدك وكلمة المرور للعودة إلى موظفيك ومهامك."
-        }
-      />
+    <main className="auth-experience">
+      <AmbientBackground quiet />
+      <header className="auth-topbar">
+        <Link to="/" className="auth-logo"><Sparkles /> <span>سهل</span></Link>
+        <ThemeToggle />
+      </header>
 
-      <section className="mx-auto max-w-2xl px-5 pb-24">
+      <div className="auth-layout">
+        <aside className="auth-story" aria-label="فريقك في سهل">
+          <div>
+            <span className="auth-eyebrow">ستة متخصصين · مساحة عمل واحدة</span>
+            <h2>فريق كامل ينتظر أول مهمة منك.</h2>
+            <p>يعملون معًا، يتذكرون سياق مشروعك، ويعرضون عليك ما يحتاج موافقتك قبل أن يتحرك.</p>
+          </div>
+          <TeamOrbit compact />
+          <ul className="auth-proof-list">
+            {["عربي أصيل بكل اللهجات", "بياناتك وصلاحياتك تحت سيطرتك", "يمكنك البدء أو الإلغاء في أي وقت"].map((item) => (
+              <li key={item}><CheckCircle2 /> {item}</li>
+            ))}
+          </ul>
+        </aside>
+
+        <section className="auth-form-column">
+          <div className="auth-mobile-intro">
+            <span className="auth-eyebrow">سهل يبدأ من هنا</span>
+            <h1>{isSignup ? "ابنِ فريقك في دقيقة" : "أهلًا بعودتك"}</h1>
+            <p>{isSignup ? "أخبرنا عنك، وسنجهز أول مساحة عمل لك." : "فريقك ومهامك ينتظرونك."}</p>
+          </div>
         {isSignup && chosenPlan ? (
           <Reveal>
-            <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-secondary/60 px-5 py-4">
+            <div className="auth-plan-note">
               <p className="text-sm font-bold">
                 اخترت باقة «{chosenPlan.name}» — تبدأ بـ ١٤ يوماً مجاناً بدون بطاقة.
               </p>
@@ -250,9 +269,14 @@ function AuthPage() {
           </Reveal>
         ) : null}
         <Reveal>
-          <div className="rounded-3xl border border-border bg-card p-6 shadow-card md:p-8">
+          <div className="auth-form-card">
+            <div className="mb-6 hidden lg:block">
+              <span className="auth-eyebrow">{isSignup ? "حساب مجاني بدون بطاقة" : "دخول آمن"}</span>
+              <div className="mt-3 font-display text-3xl font-black">{isSignup ? "كوّن فريقك الآن" : "سجّل الدخول إلى فريقك"}</div>
+              <p className="mt-2 text-sm text-muted-foreground">{isSignup ? "ثلاث خطوات قصيرة، ثم تبدأ مساحة العمل." : "أدخل بياناتك للعودة إلى كل ما أنجزه فريقك."}</p>
+            </div>
 
-            <div className="mb-6 grid grid-cols-2 gap-1 rounded-2xl bg-secondary p-1">
+            <div className="auth-mode-switch">
               {(
                 [
                   { k: "signup", l: "إنشاء حساب" },
@@ -265,8 +289,8 @@ function AuthPage() {
                   onClick={() => switchMode(t.k)}
                   aria-pressed={mode === t.k}
                   className={cn(
-                    "rounded-xl px-4 py-2.5 text-sm font-bold transition-colors",
-                    mode === t.k ? "bg-card text-primary shadow-card" : "text-ink-soft",
+                    "auth-mode-option",
+                    mode === t.k && "is-active",
                   )}
                 >
                   {t.l}
@@ -274,7 +298,7 @@ function AuthPage() {
               ))}
             </div>
 
-            <form onSubmit={onSubmit} noValidate className="space-y-4">
+            <form onSubmit={onSubmit} noValidate className="auth-form space-y-4">
               {isSignup ? (
                 <>
                   <Field
@@ -459,7 +483,7 @@ function AuthPage() {
               <button
                 type="submit"
                 disabled={busy}
-                className="flex w-full items-center justify-center gap-2 rounded-full bg-foreground px-6 py-3.5 font-bold text-background transition-transform duration-300 hover:-translate-y-0.5 disabled:opacity-60"
+                className="auth-submit"
               >
                 {busy ? <Loader2 className="size-4.5 animate-spin" /> : <Sparkles className="size-4.5" />}
                 {busy ? "لحظة..." : isSignup ? "أنشئ حسابي" : "دخول"}
@@ -486,7 +510,8 @@ function AuthPage() {
           </div>
         </Reveal>
       </section>
-    </PageShell>
+      </div>
+    </main>
   );
 }
 

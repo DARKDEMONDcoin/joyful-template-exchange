@@ -1,265 +1,68 @@
 import { useState } from "react";
-import { Megaphone, Mail, Handshake, PenTool, Palette, LineChart } from "lucide-react";
+import { ArrowLeft, CheckCircle2 } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { Reveal } from "@/components/Reveal";
 import { Portrait } from "@/components/site/Portrait";
+import { team } from "@/data/team";
 import { cn } from "@/lib/utils";
 
-type Employee = {
-  id: string;
-  name: string;
-  role: string;
-  icon: typeof Megaphone;
-  tint: string;
-  summary: string;
-  tasks: string[];
-  metric: { k: string; v: string }[];
+const copy: Record<string, { promise: string; tasks: string[]; proof: string }> = {
+  sonny: { promise: "يحوّل خطتك إلى حضور يومي لا يتوقف.", tasks: ["خطة محتوى شهرية", "تصميم ونشر على المنصات", "متابعة التفاعل"], proof: "حتى ١٢٠ منشورًا شهريًا" },
+  eva: { promise: "تحمي وقتك من البريد والمواعيد والتفاصيل.", tasks: ["فرز البريد والأولويات", "تنظيم الاجتماعات", "ملخص يومي تنفيذي"], proof: "يوفّر حتى ١٢ ساعة أسبوعيًا" },
+  sam: { promise: "يبني خط مبيعات ويتابع الفرص بدلًا منك.", tasks: ["بحث العملاء المحتملين", "رسائل مخصصة", "تحديث فرص البيع"], proof: "حتى ١٬٥٠٠ تواصل شهريًا" },
+  nour: { promise: "تجعل علامتك إجابة يكتشفها الناس ويثقون بها.", tasks: ["بحث الكلمات والفرص", "محتوى عربي أصيل", "تحسين الظهور والصفحات"], proof: "حتى ٢٠ مقالًا شهريًا" },
+  dana: { promise: "تعطي كل فكرة شكلًا واضحًا ومتسقًا مع هويتك.", tasks: ["إعلانات ومنشورات", "قوالب وهوية بصرية", "مقاسات لكل منصة"], proof: "حتى ٢٠٠ تصميم شهريًا" },
+  adam: { promise: "يخبرك ماذا تعني الأرقام وما القرار التالي.", tasks: ["جمع المؤشرات", "تنبيهات الانخفاض", "توصيات قابلة للتنفيذ"], proof: "١٥ مصدر بيانات في لوحة واحدة" },
 };
 
-const employees: Employee[] = [
-  {
-    id: "sonny",
-    name: "سِراج",
-    role: "مدير السوشيال ميديا",
-    icon: Megaphone,
-    tint: "var(--jade)",
-    summary:
-      "يخطط المحتوى الشهري، يكتب المنشورات بلهجتك، يولّد الصور بنص عربي سليم، وينشر بنفسه في أفضل توقيت لكل منصة.",
-    tasks: [
-      "تقويم محتوى شهري كامل بضغطة",
-      "توليد صور ومقاطع قصيرة بالعلامة التجارية",
-      "نشر تلقائي على 7 منصات + رد على التعليقات",
-      "تقرير أسبوعي بالتفاعل والوصول",
-    ],
-    metric: [
-      { k: "منشور/شهر", v: "120+" },
-      { k: "نمو التفاعل", v: "3.2×" },
-    ],
-  },
-  {
-    id: "eva",
-    name: "أمَل",
-    role: "المساعدة التنفيذية",
-    icon: Mail,
-    tint: "var(--sky)",
-    summary:
-      "تفرز بريدك، ترد على المتكرر، ترتّب مواعيدك، وتحضّر لك ملخّص يومي قصير لكل ما يحتاج قرارك.",
-    tasks: [
-      "فلترة وترتيب البريد حسب الأولوية",
-      "ردود جاهزة بأسلوبك تحتاج موافقتك فقط",
-      "إدارة التقويم وحجز الاجتماعات",
-      "ملخص صباحي في 60 ثانية",
-    ],
-    metric: [
-      { k: "إيميل/يوم", v: "300+" },
-      { k: "ساعة موفَّرة", v: "12/أسبوع" },
-    ],
-  },
-  {
-    id: "sam",
-    name: "سالم",
-    role: "مسؤول المبيعات",
-    icon: Handshake,
-    tint: "var(--amber)",
-    summary:
-      "يبحث عن العملاء المحتملين، يراسلهم برسائل مخصصة، ويتابع حتى الرد — ويحدّث خط المبيعات تلقائياً.",
-    tasks: [
-      "بناء قوائم عملاء محتملين مطابقة لمواصفاتك",
-      "رسائل تواصل مخصصة لكل عميل",
-      "متابعة آلية مهذبة حتى الرد",
-      "تحديث CRM وتنبيهك بالفرص الساخنة",
-    ],
-    metric: [
-      { k: "رسالة/شهر", v: "1,500" },
-      { k: "معدل الرد", v: "12%" },
-    ],
-  },
-  {
-    id: "nour",
-    name: "نور",
-    role: "كاتبة المحتوى والسيو",
-    icon: PenTool,
-    tint: "var(--coral)",
-    summary:
-      "تكتب مقالات مدونة وصفحات هبوط عربية مهيّأة لمحركات البحث، بكلمات مفتاحية حقيقية من سوقك.",
-    tasks: [
-      "بحث كلمات مفتاحية بالعربي واللهجات",
-      "مقالات طويلة جاهزة للنشر",
-      "تحسين الصفحات القديمة",
-      "روابط داخلية وبيانات منظمة",
-    ],
-    metric: [
-      { k: "مقال/شهر", v: "20" },
-      { k: "زيارات عضوية", v: "+180%" },
-    ],
-  },
-  {
-    id: "dana",
-    name: "دانة",
-    role: "المصممة",
-    icon: Palette,
-    tint: "var(--jade-deep)",
-    summary:
-      "تحوّل أفكارك إلى هويّة بصرية متسقة: بانرات، إعلانات، وقوالب منشورات — بخطوط عربية أنيقة.",
-    tasks: [
-      "دليل هوية بصرية مبسّط",
-      "قوالب منشورات وإعلانات",
-      "صور منتجات ولقطات إعلانية",
-      "نسخ متعددة لاختبار A/B",
-    ],
-    metric: [
-      { k: "تصميم/شهر", v: "200+" },
-      { k: "وقت التسليم", v: "ثوانٍ" },
-    ],
-  },
-  {
-    id: "adam",
-    name: "آدم",
-    role: "محلل البيانات",
-    icon: LineChart,
-    tint: "var(--sky)",
-    summary: "يجمع أرقامك من كل المنصات في لوحة واحدة، ويخبرك بما يجب إيقافه وما يجب مضاعفته.",
-    tasks: [
-      "لوحة موحّدة لكل القنوات",
-      "تنبيهات عند أي هبوط مفاجئ",
-      "توصيات أسبوعية قابلة للتنفيذ",
-      "تقارير جاهزة للمشاركة",
-    ],
-    metric: [
-      { k: "مصدر بيانات", v: "15" },
-      { k: "تقرير", v: "تلقائي" },
-    ],
-  },
-];
-
 export function Employees() {
-  const [active, setActive] = useState(employees[0]!.id);
-  const current = employees.find((e) => e.id === active)!;
-
+  const [active, setActive] = useState(team[0]?.id ?? "sonny");
   return (
-    <section id="employees" className="mx-auto max-w-6xl scroll-mt-24 px-5 py-24">
-      <Reveal>
-        <p className="text-sm font-bold tracking-wider text-primary">الفريق</p>
-        <h2 className="mt-3 max-w-2xl font-display text-4xl leading-tight font-black md:text-5xl">
-          ستة موظفين، <span className="text-gradient">اشتراك واحد</span>
-        </h2>
-        <p className="mt-4 max-w-2xl text-lg text-muted-foreground">
-          كل موظف متخصص في مجاله ومتصل ببقية الفريق. يتشاركون نفس السياق عن شركتك، فلا تشرح نفسك
-          مرتين.
-        </p>
-      </Reveal>
-
-      <div className="mt-12 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+    <section id="employees" className="employees-stage scroll-mt-24">
+      <div className="mx-auto max-w-6xl px-5 py-24 md:py-32">
         <Reveal>
-          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-            {employees.map((e) => {
-              const on = e.id === active;
-              return (
-                <li key={e.id}>
-                  <button
-                    onMouseEnter={() => setActive(e.id)}
-                    onFocus={() => setActive(e.id)}
-                    onClick={() => setActive(e.id)}
-                    className={cn(
-                      "flex w-full items-center gap-4 rounded-2xl border p-4 text-right transition-all duration-300",
-                      on
-                        ? "-translate-y-0.5 border-transparent bg-card shadow-lift"
-                        : "border-border bg-card/40 hover:bg-card",
-                    )}
-                  >
-                    <span
-                      className="relative size-12 shrink-0 overflow-hidden rounded-2xl ring-2 ring-offset-2 ring-offset-card transition-all duration-300"
-                      style={{ ["--tw-ring-color" as string]: e.tint }}
-                    >
-                      <Portrait
-                        memberId={e.id}
-                        name={e.name}
-                        className="size-full scale-105 transition-transform duration-500"
-                      />
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block font-display text-lg font-extrabold">{e.name}</span>
-                      <span className="block text-sm text-muted-foreground">{e.role}</span>
-                    </span>
-                    <span
-                      className={cn(
-                        "mr-auto h-8 w-1 rounded-full transition-all duration-300",
-                        on ? "opacity-100" : "opacity-0",
-                      )}
-                      style={{ backgroundColor: e.tint }}
-                    />
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
+          <div className="max-w-3xl">
+            <p className="section-kicker">ليسوا أدوات. هذا فريقك.</p>
+            <h2 className="section-title">كل موظف يعرف دوره، وكلهم يعرفون مشروعك</h2>
+            <p className="section-lead">اختر الشخص المناسب للمهمة، أو كلّف الفريق كاملًا بهدف واحد. السياق ينتقل بينهم والعمل يعود إليك جاهزًا للمراجعة.</p>
+          </div>
         </Reveal>
 
-        <Reveal delay={100}>
-          <div
-            key={current.id}
-            className="relative h-full overflow-hidden rounded-3xl border border-border bg-card p-8 shadow-card"
-          >
-            <div
-              aria-hidden
-              className="absolute -top-24 -left-24 size-56 rounded-full opacity-25 blur-3xl"
-              style={{ backgroundColor: current.tint }}
-            />
-            <div className="relative">
-              <div className="flex items-center gap-5">
-                <span className="relative block size-24 shrink-0 overflow-hidden rounded-3xl shadow-card">
-                  <Portrait memberId={current.id} name={current.name} className="size-full" />
-                  <span
-                    aria-hidden
-                    className="absolute inset-x-0 bottom-0 h-1/3"
-                    style={{
-                      background: `linear-gradient(to top, color-mix(in oklab, ${current.tint} 55%, transparent), transparent)`,
-                    }}
-                  />
-                </span>
-                <div>
-                  <h3 className="font-display text-2xl font-black">{current.name}</h3>
-                  <p className="text-muted-foreground">{current.role}</p>
-                  <span
-                    className="mt-2 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold"
-                    style={{
-                      background: `color-mix(in oklab, ${current.tint} 16%, transparent)`,
-                      color: current.tint,
-                    }}
-                  >
-                    <current.icon className="size-3.5" strokeWidth={2.4} />
-                    متاح الآن
-                  </span>
-                </div>
-              </div>
-
-
-              <p className="mt-6 text-lg leading-relaxed">{current.summary}</p>
-
-              <ul className="mt-6 space-y-3">
-                {current.tasks.map((t, i) => (
-                  <li
-                    key={t}
-                    style={{ animationDelay: `${i * 90}ms` }}
-                    className="flex items-start gap-3 opacity-0 [animation:ticker-up_0.5s_ease-out_forwards]"
-                  >
-                    <span
-                      className="mt-2 size-1.5 shrink-0 rounded-full"
-                      style={{ backgroundColor: current.tint }}
-                    />
-                    <span className="text-ink-soft">{t}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <div className="mt-8 flex gap-3">
-                {current.metric.map((m) => (
-                  <div key={m.k} className="flex-1 rounded-2xl bg-secondary/70 p-4">
-                    <div className="font-display text-2xl font-black">{m.v}</div>
-                    <div className="text-xs text-muted-foreground">{m.k}</div>
+        <div className="employee-editorial-grid">
+          {team.map((member, index) => {
+            const detail = copy[member.id];
+            if (!detail) return null;
+            const on = active === member.id;
+            return (
+              <Reveal key={member.id} delay={index * 55}>
+                <article
+                  className={cn("employee-editorial-card", on && "is-active")}
+                  onMouseEnter={() => setActive(member.id)}
+                  onFocus={() => setActive(member.id)}
+                  tabIndex={0}
+                  style={{ "--employee-tone": member.tint } as React.CSSProperties}
+                >
+                  <div className="employee-photo-wrap">
+                    <Portrait memberId={member.id} name={member.name} className="size-full" eager={index < 3} />
+                    <span>{String(index + 1).padStart(2, "0")}</span>
                   </div>
-                ))}
-              </div>
-            </div>
+                  <div className="employee-editorial-copy">
+                    <p>{member.role}</p>
+                    <h3>{member.name}</h3>
+                    <strong>{detail.promise}</strong>
+                    <ul>{detail.tasks.map((task) => <li key={task}><CheckCircle2 />{task}</li>)}</ul>
+                    <div className="employee-proof">{detail.proof}</div>
+                  </div>
+                </article>
+              </Reveal>
+            );
+          })}
+        </div>
+
+        <Reveal>
+          <div className="employee-closing">
+            <p>ابدأ بموظف واحد، ووسّع فريقك عندما تحتاج.</p>
+            <Link to="/auth" search={{ mode: "signup" as const }}>قابل فريقك الآن <ArrowLeft /></Link>
           </div>
         </Reveal>
       </div>
