@@ -12,6 +12,8 @@ import { Pricing } from "@/components/site/Pricing";
 import { Faq, faqs } from "@/components/site/Faq";
 import { CtaFooter } from "@/components/site/CtaFooter";
 import { SiteFooter } from "@/components/site/SiteFooter";
+import { ImpactStats } from "@/components/site/ImpactStats";
+import { ProductShowcase } from "@/components/site/ProductShowcase";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -80,8 +82,10 @@ function Index() {
       <Nav />
       <Hero />
       <Marquee />
-      <IntegrationFlow />
+      <ImpactStats />
       <Employees />
+      <div id="workspace"><ProductShowcase /></div>
+      <IntegrationFlow />
       <Features />
       <HowItWorks />
       <Testimonials />
